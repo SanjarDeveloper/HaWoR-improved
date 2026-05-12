@@ -24,7 +24,7 @@ This is the official implementation of **[HaWoR](https://hawor-project.github.io
  
 ### Installation
 ```
-git clone --recursive https://github.com/humaidtech/HaWoR.git
+git clone --recursive https://github.com/Worldsense-Tech/HaWoR.git
 cd HaWoR
 ```
 

@@ -25,6 +25,26 @@ def smooth_joints(joints, window_length=7, polyorder=3):
     return torch.from_numpy(smoothed).to(joints.dtype)
 
 
+def gaussian_smooth_joints(joints, sigma=2.0):
+    """Zero-phase (non-causal) Gaussian temporal smoothing -- NO lag.
+
+    Symmetric filter uses past AND future frames, so the smoothed trajectory
+    stays time-aligned with the motion (unlike causal One-Euro which lags).
+    Best for offline processing where the whole clip is available.
+
+    Args:
+        joints: Tensor of shape (T, 21, 3), assumed temporally contiguous.
+        sigma: Gaussian std in frames. Larger = smoother. ~1.5-2.5 is a good range.
+    """
+    from scipy.ndimage import gaussian_filter1d
+    T = joints.shape[0]
+    if T < 3:
+        return joints
+    np_j = joints.numpy()
+    sm = gaussian_filter1d(np_j, sigma=sigma, axis=0, mode="nearest")
+    return torch.from_numpy(sm).to(joints.dtype)
+
+
 def _one_euro_alpha(cutoff, dt):
     import math
     tau = 1.0 / (2.0 * math.pi * cutoff)

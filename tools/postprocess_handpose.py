@@ -52,6 +52,24 @@ def one_euro(series, present, fps, mincutoff, beta, dcutoff=1.0):
     return out
 
 
+def gaussian_zero_lag(arr, present, sigma):
+    """Zero-phase Gaussian smoothing per contiguous present run (no lag)."""
+    from scipy.ndimage import gaussian_filter1d
+    T = len(arr)
+    i = 0
+    while i < T:
+        if not present[i]:
+            i += 1
+            continue
+        j = i
+        while j < T and present[j]:
+            j += 1
+        if j - i >= 3:
+            arr[i:j] = gaussian_filter1d(arr[i:j], sigma=sigma, axis=0, mode="nearest")
+        i = j
+    return arr
+
+
 def fill_gaps(arr, present, max_gap):
     """Linearly interpolate interior gaps up to max_gap. Returns new present mask."""
     T = len(present)
@@ -122,6 +140,9 @@ def main():
     ap.add_argument("--maxgap", type=int, default=10)
     ap.add_argument("--no-bone", action="store_true")
     ap.add_argument("--no-smooth", action="store_true")
+    ap.add_argument("--method", choices=["gaussian", "oneeuro"], default="gaussian",
+                    help="gaussian = zero-lag (offline, no delay); oneeuro = causal (real-time, lags)")
+    ap.add_argument("--sigma", type=float, default=2.0, help="Gaussian std in frames")
     args = ap.parse_args()
 
     data = json.load(open(args.inp))
@@ -143,10 +164,13 @@ def main():
             present = ~np.isnan(arr[:, 0, 0])
             present = fill_gaps(arr, present, args.maxgap)
             if not args.no_smooth:
-                for j in range(21):
-                    for c in range(3):
-                        arr[:, j, c] = one_euro(arr[:, j, c], present,
-                                                args.fps, args.mincutoff, args.beta)
+                if args.method == "gaussian":
+                    arr = gaussian_zero_lag(arr, present, args.sigma)
+                else:
+                    for j in range(21):
+                        for c in range(3):
+                            arr[:, j, c] = one_euro(arr[:, j, c], present,
+                                                    args.fps, args.mincutoff, args.beta)
             if key == "hand_world_landmarks" and not args.no_bone:
                 arr = canon_bones(arr, present)
             _writeback(frames, slot_by_frame, key, arr, present)

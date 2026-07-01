@@ -13,7 +13,7 @@ from tqdm import tqdm
 from scripts.scripts_test_video.detect_track_video import detect_track_video
 from scripts.scripts_test_video.hawor_video import hawor_motion_estimation
 from hawor.utils.process import run_mano, run_mano_left
-from hawor.utils.smoothing import smooth_joints
+from hawor.utils.smoothing import smooth_joints, one_euro_smooth_joints
 from hawor.utils.rotation import rotation_matrix_to_angle_axis, angle_axis_to_rotation_matrix
 
 
@@ -308,7 +308,7 @@ if __name__ == '__main__':
                         j = i
                         while j < joints_3d.shape[0] and valid[vis_start + j]:
                             j += 1
-                        joints_3d[i:j] = smooth_joints(joints_3d[i:j].clone())
+                        joints_3d[i:j] = one_euro_smooth_joints(joints_3d[i:j].clone())
                         i = j
                     else:
                         i += 1

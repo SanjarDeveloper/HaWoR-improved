@@ -20,6 +20,59 @@ This is the official implementation of **[HaWoR](https://hawor-project.github.io
 
 ![teaser](assets/teaser.png)
 
+---
+
+<div align="center">
+
+## 🚀 Improved Fork — Stable Hand Pose
+
+![status](https://img.shields.io/badge/fork-improved-brightgreen?style=flat)
+![jitter](https://img.shields.io/badge/3D%20jitter-−53%25-blue?style=flat)
+![lag](https://img.shields.io/badge/temporal%20lag-eliminated-orange?style=flat)
+![coverage](https://img.shields.io/badge/coverage-98.4%25-success?style=flat)
+
+</div>
+
+This fork of HaWoR focuses on **more accurate and temporally stable** hand pose for
+offline egocentric video, achieved purely through **code & post-processing** — no model
+retraining. All changes are backward-compatible: the production `api.py` / Celery path is
+untouched, so only the `main.py` CLI path is affected.
+
+### What's improved
+
+| Improvement | Effect |
+| --- | --- |
+| **Zero-lag Gaussian smoothing** (replaces causal One-Euro) | Removes skeleton lag while cutting jitter |
+| **Bone-length canonicalization** | Enforces stable hand geometry (`bone_CV → 0`) |
+| **Gap-filling** of short detection dropouts | Smoother, more continuous tracks |
+| **Evaluation harness** | Objective metrics: jitter, coverage, bone-length CV |
+
+### Results (baseline → improved)
+
+| Metric | Baseline | Improved |
+| --- | --- | --- |
+| 3D jitter (L / R) | 4.6 / 5.6 mm | **1.4 – 1.8 mm** (~−53%) |
+| Bone-length CV | ~0.06 | **0.00** |
+| Coverage | 98.4% | 98.4% (unchanged) |
+| Temporal lag | present (One-Euro) | **none** (zero-lag) |
+
+### New tools (`tools/`, no GPU required)
+
+```bash
+# 1. Evaluate stability of a HaWoR output JSON
+python tools/eval_handpose.py <hand.json>
+
+# 2. Post-process: gap-fill + zero-lag smoothing + bone canonicalization
+python tools/postprocess_handpose.py <in.json> <out.json> --method gaussian --sigma 2.0
+
+# 3. Render a skeleton overlay from JSON + video (CPU only)
+python tools/render_overlay.py <video> <hand.json> <out.mp4>
+```
+
+> 📄 Full details, design rationale and findings: **[IMPROVEMENTS.md](./IMPROVEMENTS.md)**
+
+---
+
 ## Installation
  
 ### Installation

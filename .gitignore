@@ -80,3 +80,9 @@ imgui.ini
 egocentric_*
 .claude/
 .env
+
+# Quest/CSV comparison experiment (kept separate, not part of this fork)
+tools/csv_overlay.py
+tools/calib_quest.py
+tools/compare_overlay.py
+tools/quest_calib.json
